@@ -1,0 +1,55 @@
+name: Instalador do Windows
+
+# Publica um instalador novo sempre que uma versao e marcada.
+#
+# Marcar a tag v1.0.0 gera um release no GitHub com os tres arquivos que o
+# Squirrel precisa: RELEASES, o pacote .nupkg e o setup .exe. Os tres importam,
+# nao so o .exe: o app ja instalado le esse mesmo release para se atualizar
+# sozinho, e sem o RELEASES ele nao descobre que existe versao nova.
+#
+# A atualizacao automatica passa pelo update.electronjs.org, que exige apenas
+# repositorio publico e releases no GitHub. Assinatura digital so e exigida no
+# macOS, entao no Windows funciona sem certificado.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Compilar e publicar
+    runs-on: windows-latest
+
+    steps:
+      - name: Baixar o codigo
+        uses: actions/checkout@v4
+
+      # O submodulo dos icones esta marcado como "update = none" no
+      # .gitmodules, entao um checkout comum passa direto por ele. Sem esta
+      # linha o instalador sai sem icone.
+      - name: Baixar os icones
+        run: git -c submodule."assets".update=checkout submodule update --init assets
+
+      - name: Preparar o pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Preparar o Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Compilar e publicar
+        run: pnpm exec electron-forge publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

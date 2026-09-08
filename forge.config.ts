@@ -13,10 +13,10 @@ import path from "node:path";
 // import { globSync } from "node:fs";
 
 const STRINGS = {
-  author: "Revolt Platforms LTD",
-  name: "Stoat",
-  execName: "stoat-desktop",
-  description: "Open source user-first chat platform.",
+  author: "Lucas Maia",
+  name: "Callju",
+  execName: "callju",
+  description: "Nosso canto na internet.",
 };
 
 const ASSET_DIR = "assets/desktop";
@@ -29,13 +29,13 @@ const makers: ForgeConfig["makers"] = [
     name: STRINGS.name,
     authors: STRINGS.author,
     // todo: hoist this
-    iconUrl: `https://stoat.chat/app/assets/icon-DUSNE-Pb.ico`,
+    iconUrl: `https://callju.online/assets/web/favicon.ico`,
     // todo: loadingGif
     setupIcon: `${ASSET_DIR}/icon.ico`,
     description: STRINGS.description,
     exe: `${STRINGS.execName}.exe`,
     setupExe: `${STRINGS.execName}-setup.exe`,
-    copyright: "Copyright (C) 2025 Revolt Platforms LTD",
+    copyright: "Callju. Baseado no Stoat, sob AGPLv3.",
   }),
   new MakerZIP({}),
   new MakerFlatpak({
@@ -172,7 +172,7 @@ const config: ForgeConfig = {
   publishers: [
     new PublisherGithub({
       repository: {
-        owner: "stoatchat",
+        owner: "lucasmaiaws13-eng",
         name: "for-desktop",
       },
     }),
