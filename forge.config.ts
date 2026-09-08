@@ -175,6 +175,12 @@ const config: ForgeConfig = {
         owner: "lucasmaiaws13-eng",
         name: "for-desktop",
       },
+      // O padrao do Electron Forge e criar o release como rascunho, e
+      // rascunho nao existe para quem esta de fora: ninguem consegue baixar e
+      // o atualizador automatico nao enxerga. Como cada tag aqui ja e uma
+      // decisao deliberada, o release sai publicado direto.
+      draft: false,
+      prerelease: false,
     }),
   ],
 };
