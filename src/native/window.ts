@@ -89,9 +89,14 @@ export function createMainWindow() {
   }
 
   // load the entrypoint
-  mainWindow
-    .loadURL(BUILD_URL.toString())
-    .then(() => mainWindow.webContents.reload());
+  // Carrega e pronto, sem recarregar em seguida.
+  //
+  // Aqui havia um .then(() => reload()) logo apos o loadURL, o que recarregava
+  // a pagina no meio da propria inicializacao dela. Era uma corrida: as vezes
+  // o cliente sobrevivia, as vezes morria e a janela ficava preta. Com o
+  // painel de desenvolvedor aberto o tempo mudava o bastante para escapar,
+  // que foi exatamente o sintoma observado.
+  mainWindow.loadURL(BUILD_URL.toString());
 
   // minimise window to tray
   mainWindow.on("close", (event) => {
