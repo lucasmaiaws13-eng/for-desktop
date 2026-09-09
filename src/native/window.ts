@@ -260,8 +260,7 @@ export function createMainWindow() {
   );
   ipcMain.on("close", () => mainWindow.close());
 
-  // Versao de diagnostico: abre o painel para o erro aparecer sozinho.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // let i = 0;
   // setInterval(() => setBadgeCount((++i % 30) + 1), 1000);
