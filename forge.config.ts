@@ -19,7 +19,7 @@ const STRINGS = {
   description: "Nosso canto na internet.",
 };
 
-const ASSET_DIR = "icone";
+const ASSET_DIR = "assets/desktop";
 
 /**
  * Build targets for the desktop app
