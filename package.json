@@ -1,7 +1,7 @@
 {
   "name": "callju-desktop",
   "productName": "Callju",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "main": ".vite/build/main.js",
   "repository": "lucasmaiaws13-eng/for-desktop",
   "scripts": {
