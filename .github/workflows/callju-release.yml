@@ -35,6 +35,17 @@ jobs:
       - name: Baixar os icones
         run: git -c submodule."assets".update=checkout submodule update --init assets
 
+      # O ASSET_DIR aponta para assets/desktop e fica assim de proposito:
+      # apontar ele para outra pasta quebrava o app, e nao descobri por que.
+      # Entao o icone entra por cima dos arquivos do Stoat, depois que o
+      # submodulo e baixado. A configuracao nao muda, so o conteudo.
+      - name: Trocar o icone pelo do Callju
+        shell: bash
+        run: |
+          cp icone/icon.ico assets/desktop/icon.ico
+          cp icone/icon.png assets/desktop/icon.png
+          cp icone/hicolor/*.png assets/desktop/hicolor/ || true
+
       - name: Preparar o pnpm
         uses: pnpm/action-setup@v4
         with:
