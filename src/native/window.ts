@@ -29,6 +29,33 @@ export const BUILD_URL = new URL(
 // internal window state
 let shouldQuit = false;
 
+/**
+ * Apaga a copia do site que o service worker guarda no computador.
+ *
+ * O site se instala como app offline: guarda todo o codigo e passa a abrir
+ * dessa copia. Se a copia guardada for de uma versao quebrada, a pagina trava
+ * antes de conseguir se atualizar, e fica travada pra sempre, porque a copia
+ * vive na pasta de dados, que nem reinstalar apaga. No app desktop nao existe
+ * modo offline, entao sempre buscar o site novo nao custa nada: o login fica,
+ * porque ele mora em outro lugar.
+ */
+export async function limparCopiaDoSite() {
+  try {
+    await session.defaultSession.clearStorageData({
+      storages: ["serviceworkers", "cachestorage"],
+    });
+    await session.defaultSession.clearCache();
+  } catch (erro) {
+    console.error("[callju] nao consegui limpar a copia do site", erro);
+  }
+}
+
+function carregarSite() {
+  limparCopiaDoSite().finally(() =>
+    mainWindow.loadURL(BUILD_URL.toString()),
+  );
+}
+
 // load the window icon
 const windowIcon = nativeImage.createFromDataURL(windowIconAsset);
 
@@ -96,7 +123,18 @@ export function createMainWindow() {
   // o cliente sobrevivia, as vezes morria e a janela ficava preta. Com o
   // painel de desenvolvedor aberto o tempo mudava o bastante para escapar,
   // que foi exatamente o sintoma observado.
-  mainWindow.loadURL(BUILD_URL.toString());
+  carregarSite();
+
+  // Sem internet ou servidor fora do ar na hora de abrir: tenta de novo
+  // sozinho em vez de ficar na tela preta. -3 e navegacao cancelada, nao erro.
+  mainWindow.webContents.on(
+    "did-fail-load",
+    (_event, codigo, _descricao, _url, framePrincipal) => {
+      if (framePrincipal && codigo !== -3) {
+        setTimeout(carregarSite, 3000);
+      }
+    },
+  );
 
   // minimise window to tray
   mainWindow.on("close", (event) => {
@@ -149,7 +187,11 @@ export function createMainWindow() {
       ((input.control || input.meta) && input.key.toLowerCase() === "r")
     ) {
       event.preventDefault();
-      mainWindow.webContents.reload();
+      // Recarregar e a saida que todo mundo tenta primeiro, entao ela tambem
+      // joga fora a copia guardada do site
+      limparCopiaDoSite().finally(() =>
+        mainWindow.webContents.reloadIgnoringCache(),
+      );
     }
   });
 

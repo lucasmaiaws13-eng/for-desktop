@@ -1,5 +1,8 @@
 import { IUpdateInfo, updateElectronApp } from "update-electron-app";
 
+import { execFileSync } from "node:child_process";
+import { rmSync } from "node:fs";
+
 import { BrowserWindow, Notification, app, shell } from "electron";
 import started from "electron-squirrel-startup";
 
@@ -9,6 +12,21 @@ import { initDiscordRpc } from "./native/discordRpc";
 import { initTray } from "./native/tray";
 import { initVirtualMic } from "./native/virtualMic";
 import { BUILD_URL, createMainWindow, mainWindow } from "./native/window";
+
+// Desinstalar precisa apagar tambem a pasta de dados (Callju, dentro do AppData).
+// O Squirrel so remove a pasta do programa, e o que sobrava ali, principalmente
+// a copia do site guardada pelo service worker, fazia a reinstalacao abrir
+// travada do mesmo jeito que antes.
+if (
+  process.platform === "win32" &&
+  process.argv.includes("--squirrel-uninstall")
+) {
+  try {
+    rmSync(app.getPath("userData"), { recursive: true, force: true });
+  } catch {
+    // Arquivo preso por outro processo: o resto sai mesmo assim
+  }
+}
 
 // Squirrel-specific logic
 // create/remove shortcuts on Windows when installing / uninstalling
@@ -25,10 +43,38 @@ if (!config.hardwareAcceleration) {
 // ensure only one copy of the application can run
 const acquiredLock = app.requestSingleInstanceLock();
 
+// Primeira abertura depois de instalar, com outra copia ainda rodando.
+//
+// Fechar a janela so esconde o app na bandeja, entao a versao antiga quase
+// sempre continua viva. Sem isto a versao nova, ao abrir, so trazia pra frente
+// a janela da antiga, travada, e parecia que instalar nao tinha adiantado
+// nada. Aqui a antiga e encerrada e a nova abre no lugar dela.
+if (
+  !acquiredLock &&
+  process.platform === "win32" &&
+  process.argv.includes("--squirrel-firstrun")
+) {
+  try {
+    execFileSync("taskkill", [
+      "/F",
+      "/IM",
+      "callju.exe",
+      "/FI",
+      `PID ne ${process.pid}`,
+    ]);
+  } catch {
+    // Nada pra encerrar
+  }
+  app.relaunch({
+    args: process.argv.slice(1).filter((a) => a !== "--squirrel-firstrun"),
+  });
+  app.exit(0);
+}
+
 const onNotifyUser = (_info: IUpdateInfo) => {
   const notification = new Notification({
-    title: "Update Available",
-    body: "Restart the app to install the update.",
+    title: "Atualização do Callju pronta",
+    body: "Pra instalar, clique com o botão direito no ícone do Callju perto do relógio, escolha Sair e abra de novo.",
     silent: true,
   });
 
