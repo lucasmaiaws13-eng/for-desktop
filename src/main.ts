@@ -139,6 +139,13 @@ if (acquiredLock) {
     contents.on("will-navigate", (event, navigationUrl) => {
       if (new URL(navigationUrl).origin !== BUILD_URL.origin) {
         event.preventDefault();
+
+        // Antes o clique simplesmente nao fazia nada, e parecia botao
+        // quebrado: sair do Callju era proibido e ponto. Agora o endereco vai
+        // pro navegador do sistema, que e onde ele deve abrir mesmo.
+        if (/^https?:/.test(navigationUrl)) {
+          setImmediate(() => shell.openExternal(navigationUrl));
+        }
       }
     });
 
