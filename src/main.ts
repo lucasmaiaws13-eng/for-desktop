@@ -1,6 +1,6 @@
 import { IUpdateInfo, updateElectronApp } from "update-electron-app";
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { rmSync } from "node:fs";
 
 import { BrowserWindow, Notification, app, shell } from "electron";
@@ -25,6 +25,29 @@ if (
     rmSync(app.getPath("userData"), { recursive: true, force: true });
   } catch {
     // Arquivo preso por outro processo: o resto sai mesmo assim
+  }
+}
+
+// Depois de instalar ou atualizar, o Windows continuava mostrando o icone
+// antigo nos atalhos e na barra de tarefas (ele guarda os icones em cache).
+// Uns segundos depois, quando o Squirrel ja refez os atalhos, manda o Windows
+// recarregar os icones.
+if (
+  process.platform === "win32" &&
+  (process.argv.includes("--squirrel-updated") ||
+    process.argv.includes("--squirrel-install"))
+) {
+  try {
+    spawn(
+      "cmd.exe",
+      [
+        "/c",
+        "ping -n 8 127.0.0.1 >nul & ie4uinit.exe -ClearIconCache & ie4uinit.exe -show",
+      ],
+      { detached: true, stdio: "ignore", windowsHide: true },
+    ).unref();
+  } catch {
+    // Sem isso o icone novo aparece do mesmo jeito, so demora mais
   }
 }
 
